@@ -44,13 +44,3 @@ pump(a, b, a, function (err) {
   logs[1].createReadStream().on('data', console.log.bind(console, 'b'))
 })
 
-// eos(a, function (err) {
-//   console.log('eos a', err ? err.message : '')
-//   logs[0].createReadStream().on('data', console.log.bind(console, 'a'))
-// })
-// eos(b, function (err) {
-//   console.log('eos b', err ? err.message : '')
-//   logs[1].createReadStream().on('data', console.log.bind(console, 'b'))
-// })
-
-
