@@ -10,8 +10,9 @@ function HandshakeStream (protocol, payload, shake) {
   var w = new stream.Writable({objectMode:true})
   w._write = function (chunk, enc, next) {
     if (upgraded) {
-      protocol.write(chunk)
-      next()
+      var ok = protocol.write(chunk)
+      if (!ok) protocol.once('drain', next)  // respect backpressure from protocol
+      else next()
     } else {
       shake(chunk, function (err) {
         next(err)
