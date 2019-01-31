@@ -1,30 +1,25 @@
 var handshake = require('.')
 var hyperlog = require('hyperlog')
 var memdb = require('memdb')
-var eos = require('end-of-stream')
 var pump = require('pump')
 
-var logs = []
+var logA = hyperlog(memdb())
+var logB = hyperlog(memdb())
 
-function inner (id) {
-  var log = hyperlog(memdb())
-  var ops = new Array(1).fill(0).map(function () {
-    return {
-      value: id + '_' + String(Math.random()).substring(6),
-      links: []
-    }
+logA.append('hello from A', function () {
+  logB.append('greetings from B', function () {
+    ready()
   })
-  log.batch(ops)
-  logs.push(log)
-  return log.replicate()
+})
+
+function makePayload (id) {
+  var payload = { protocolVersion: 6, initiator: id }
+  return payload
 }
 
-function peer (id) {
-  var payload = { protocolVersion: 6, initiator: id }
-  // if (id==='b') payload.protocolVersion = 5
-
+function ready () {
   var shake = function (req, accept) {
-    console.log(id, 'got handshake', req)
+    console.log('got handshake', req)
     if (req.protocolVersion >= 6) {
       accept()
     } else {
@@ -32,15 +27,12 @@ function peer (id) {
     }
   }
 
-  return handshake(inner(id), payload, shake)
+  var r1 = handshake(logA.replicate(), makePayload('a'), shake)
+  var r2 = handshake(logB.replicate(), makePayload('b'), shake)
+
+  pump(r1, r2, r1, function (err) {
+    console.log('pump end', err ? err.message : '')
+    logA.createReadStream().on('data', function (node) { console.log('A ->', node.value.toString()) })
+    logB.createReadStream().on('data', function (node) { console.log('B ->', node.value.toString()) })
+  })
 }
-
-var a = peer('a')
-var b = peer('b')
-
-pump(a, b, a, function (err) {
-  console.log('pump end', err ? err.message : '')
-  logs[0].createReadStream().on('data', console.log.bind(console, 'a'))
-  logs[1].createReadStream().on('data', console.log.bind(console, 'b'))
-})
-
