@@ -7,11 +7,11 @@ function HandshakeStream (protocol, payload, shake) {
   var res = duplexify.obj()
   var upgraded = false
 
-  var w = new stream.Writable({objectMode:true})
+  var w = new stream.Writable({objectMode: true})
   w._write = function (chunk, enc, next) {
     if (upgraded) {
       var ok = protocol.write(chunk)
-      if (!ok) protocol.once('drain', next)  // respect backpressure from protocol
+      if (!ok) protocol.once('drain', next) // respect backpressure from protocol
       else next()
     } else {
       shake(chunk, function (err) {
@@ -30,7 +30,7 @@ function HandshakeStream (protocol, payload, shake) {
     }
   }
 
-  var r = new stream.Readable({objectMode:true})
+  var r = new stream.Readable({objectMode: true})
   r._read = function () {
   }
   r.push(payload)
