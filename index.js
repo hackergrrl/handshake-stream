@@ -28,7 +28,13 @@ function HandshakeStream (protocol, payload, shake) {
       }
       if (!output) return next()
 
-      shake(output[0], function (err) {
+      var req
+      try {
+        req = JSON.parse(output[0])
+      } catch (e) {
+        next(e)
+      }
+      shake(req, function (err) {
         next(err)
         if (err) return
 
