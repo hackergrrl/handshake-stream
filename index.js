@@ -20,15 +20,15 @@ function HandshakeStream (protocol, payload, shake) {
     } else {
       // accumulate buffer chunks from the stream until the full handshake
       // object is collected
-      var msg
+      var output
       try {
-        msg = decode(chunk)
+        output = decode(chunk)
       } catch (e) {
         next(e)
       }
-      if (!msg) return next()
+      if (!output) return next()
 
-      shake(msg, function (err) {
+      shake(output[0], function (err) {
         next(err)
         if (err) return
 
@@ -40,6 +40,7 @@ function HandshakeStream (protocol, payload, shake) {
         protocol.on('finish', function () {
           res.end()
         })
+        res.write(output[1])
         protocol.resume()
       })
     }

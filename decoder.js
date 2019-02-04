@@ -1,6 +1,6 @@
-module.exports = JsonDecode
+module.exports = Decode
 
-function JsonDecode () {
+function Decode () {
   var expectedBytes = null
   var accum = Buffer.alloc(0)
 
@@ -14,9 +14,9 @@ function JsonDecode () {
     }
 
     if (accum.length >= expectedBytes + 4) {
-      var json = accum.slice(4, expectedBytes + 4).toString()
-      var obj = JSON.parse(json)
-      return obj
+      var data = accum.slice(4, expectedBytes + 4)
+      var overflow = accum.slice(expectedBytes + 4)
+      return [data, overflow]
     }
   }
 }
