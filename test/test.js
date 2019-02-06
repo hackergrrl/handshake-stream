@@ -22,14 +22,14 @@ test('counter', function (t) {
   pump(r1, r2, r1, function (err) {
     t.error(err)
     t.deepEquals(a.processed, [
-      {left: 3, sender: 'b' },
-      {left: 2, sender: 'b' },
-      {left: 1, sender: 'b' }
+      { left: 3, sender: 'b' },
+      { left: 2, sender: 'b' },
+      { left: 1, sender: 'b' }
     ])
     t.deepEquals(b.processed, [
-      {left: 3, sender: 'a' },
-      {left: 2, sender: 'a' },
-      {left: 1, sender: 'a' }
+      { left: 3, sender: 'a' },
+      { left: 2, sender: 'a' },
+      { left: 1, sender: 'a' }
     ])
   })
 })
