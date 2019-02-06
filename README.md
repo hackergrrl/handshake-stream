@@ -105,6 +105,19 @@ With [node.js](https://nodejs.org) installed, install from npm:
 npm install handshake-stream
 ```
 
+### how it works
+
+Internally, handshake-stream creates a Duplex stream with its own readable and writable ends to manage all incoming & outgoing data.
+
+Upon creation, the readable side provides the following bytes in order: `<LEN><PAYLOAD><ACCEPT-SIGNAL><REST>`, where
+
+- `LEN` is a UInt32LE of the length of `PAYLOAD`
+- `PAYLOAD` is a JSON-encoded string
+- `ACCEPT-SIGNAL` is a UInt8 with all 1s set (127)
+- `REST` is whatever readable bytes the inner protocol provides
+
+Only `<LEN><PAYLOAD>` are sent initially, and `ACCEPT-SIGNAL` is only sent once the `accept()` callback is called to indicate that the program would like to proceed to the inner protocol. After that, the inner protocol's readable & writable ends are hooked up and the stream proceeds as though handshake-stream was never even there. The `drain` event is listened to on the inner protocol to respect backpressure.
+
 ## license
 
 ISC
