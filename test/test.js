@@ -126,3 +126,32 @@ test('rejected handshake', function (t) {
     })
   }
 })
+
+test('slow handshake', function (t) {
+  t.plan(3)
+
+  var a = counterDuplex('a')
+  var b = counterDuplex('b')
+
+  var shake = function (req, accept) {
+    var delay = Math.floor(Math.random() * 4000)
+    setTimeout(accept, delay)
+  }
+
+  var r1 = handshake(a, {}, shake)
+  var r2 = handshake(b, {}, shake)
+
+  pump(r1, r2, r1, function (err) {
+    t.error(err)
+    t.deepEquals(a.processed, [
+      { left: 3, sender: 'b' },
+      { left: 2, sender: 'b' },
+      { left: 1, sender: 'b' }
+    ])
+    t.deepEquals(b.processed, [
+      { left: 3, sender: 'a' },
+      { left: 2, sender: 'a' },
+      { left: 1, sender: 'a' }
+    ])
+  })
+})
