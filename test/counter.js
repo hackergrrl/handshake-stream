@@ -1,7 +1,7 @@
 var stream = require('stream')
 
 module.exports = function (id) {
-  var counter = new stream.Duplex({allowHalfOpen:false})
+  var counter = new stream.Duplex({allowHalfOpen: false})
   counter.processed = []
 
   var payloadsLeft = 3
@@ -26,7 +26,7 @@ module.exports = function (id) {
   counter._write = function (chunk, enc, next) {
     accum = Buffer.concat([accum, chunk])
     tryParse()
-    next()
+    process.nextTick(next)
   }
 
   function tryParse () {
@@ -48,7 +48,6 @@ module.exports = function (id) {
       expected = 0
       tryParse()
     }
-
   }
 
   // exposes '.processed' so you can examine the payloads received
