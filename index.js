@@ -46,7 +46,10 @@ function HandshakeStream (protocol, payload, shake) {
       } catch (e) {
         next(e)
       }
+      var once = false
       shake(req, function (err) {
+        if (once) return
+        once = true
         if (err) return next(err)
 
         // check if the other side's ACCEPT byte was received
