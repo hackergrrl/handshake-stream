@@ -6,8 +6,12 @@ module.exports = HandshakeStream
 
 function HandshakeStream (protocol, payload, shake) {
   var res = duplexify.obj()
-  var state = 'start' // other valid states: 'accepted', 'ready'
+
+  // valid states: start, accepted, pre-shake, pre-shake-accepted, ready
+  var state = 'start'
+
   var decode = decoder()
+  var accum = Buffer.alloc(0)
 
   var w = new stream.Writable()
   w._write = function (chunk, enc, next) {
@@ -27,7 +31,18 @@ function HandshakeStream (protocol, payload, shake) {
         state = 'error'
         return next(new Error('unexpected non-ready-signal byte received'))
       }
+      res.emit('accepted')
       upgrade(chunk.slice(1))
+      next()
+    } else if (state === 'pre-shake') {
+      if (chunk.readUInt8(0) !== 127) {
+        state = 'error'
+        return next(new Error('unexpected non-ready-signal byte received'))
+      }
+      process.nextTick(function () {
+        res.emit('accepted')
+      })
+      state = 'pre-shake-accepted'
       next()
     } else if (state === 'start') {
       // accumulate buffer chunks from the stream until the full handshake
@@ -47,28 +62,31 @@ function HandshakeStream (protocol, payload, shake) {
         next(e)
       }
       var once = false
+      state = 'pre-shake'
       shake(req, function (err) {
         if (once) return
         once = true
         if (err) return next(err)
 
         // check if the other side's ACCEPT byte was received
-        if (output[1].length >= 1) {
+        if (state === 'pre-shake-accepted') {
+          upgrade(output[1].slice(1))
+        } else if (output[1].length >= 1) {
           if (chunk.readUInt8(0) !== 127) {
             state = 'error'
             return next(new Error('unexpected non-ready-signal byte received'))
           }
+          res.emit('accepted')
           upgrade(output[1].slice(1))
         } else {
           state = 'accepted'
         }
 
         // send acceptance signal
-        var signalBuf = Buffer.alloc(1).fill(127) // all 1s; signal ready to move to inner protocol
+        var signalBuf = Buffer.alloc(1).fill(127)
         r.push(signalBuf)
-
-        next()
       })
+      next()
     } else {
       res.emit('error', new Error('internal error: unknown state ' + state))
     }
@@ -89,6 +107,7 @@ function HandshakeStream (protocol, payload, shake) {
   res.setWritable(w)
 
   function upgrade (accum) {
+    state = 'ready'
     // upgrade the stream to the inner protocol
     protocol.on('data', function (data) {
       res.push(data)
@@ -98,7 +117,6 @@ function HandshakeStream (protocol, payload, shake) {
     })
     res.write(accum)
     protocol.resume()
-    state = 'ready'
   }
 
   return res
