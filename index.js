@@ -66,7 +66,7 @@ function HandshakeStream (protocol, payload, shake) {
       shake(req, function (err) {
         if (once) return
         once = true
-        if (err) return next(err)
+        if (err) return res.emit('error', err)
 
         // check if the other side's ACCEPT byte was received
         if (state === 'pre-shake-accepted') {
