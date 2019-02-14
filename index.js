@@ -63,6 +63,19 @@ function HandshakeStream (protocol, payload, shake) {
       }
       var once = false
       state = 'pre-shake'
+
+      // check if the other side also accepted our handshake
+      if (output[1].length >= 1) {
+        if (chunk.readUInt8(0) !== 127) {
+          state = 'error'
+          return next(new Error('unexpected non-ready-signal byte received'))
+        }
+        process.nextTick(function () {
+          res.emit('accepted')
+        })
+        state = 'pre-shake-accepted'
+      }
+
       shake(req, function (err) {
         if (once) return
         once = true
