@@ -11,7 +11,6 @@ function HandshakeStream (protocol, payload, shake) {
   var state = 'start'
 
   var decode = decoder()
-  var accum = Buffer.alloc(0)
 
   var w = new stream.Writable()
   w._write = function (chunk, enc, next) {
@@ -66,7 +65,7 @@ function HandshakeStream (protocol, payload, shake) {
 
       // check if the other side also accepted our handshake
       if (output[1].length >= 1) {
-        if (chunk.readUInt8(0) !== 127) {
+        if (output[1].readUInt8(0) !== 127) {
           state = 'error'
           return next(new Error('unexpected non-ready-signal byte received'))
         }
@@ -85,7 +84,7 @@ function HandshakeStream (protocol, payload, shake) {
         if (state === 'pre-shake-accepted') {
           upgrade(output[1].slice(1))
         } else if (output[1].length >= 1) {
-          if (chunk.readUInt8(0) !== 127) {
+          if (output[1].readUInt8(0) !== 127) {
             state = 'error'
             return next(new Error('unexpected non-ready-signal byte received'))
           }
