@@ -98,8 +98,8 @@ function HandshakeStream (protocol, payload, shake) {
 
         // check if the other side's ACCEPT byte was received
         if (state === 'pre-shake-accepted') {
-          upgrade(output[1].slice(1))
           debug(id, 'both sides have now ACCEPTed')
+          process.nextTick(upgrade, output[1].slice(1))
         } else if (output[1].length >= 1) {
           debug(id, 'both sides have now ACCEPTed')
           if (output[1].readUInt8(0) !== 127) {
@@ -107,7 +107,7 @@ function HandshakeStream (protocol, payload, shake) {
             return next(new Error('unexpected non-ready-signal byte received'))
           }
           res.emit('accepted')
-          upgrade(output[1].slice(1))
+          process.nextTick(upgrade, output[1].slice(1))
         } else {
           debug(id, 'waiting on remote to ACCEPT')
           state = 'accepted'
