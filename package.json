@@ -2,7 +2,7 @@
   "name": "handshake-stream",
   "description": "wrap a duplex stream in a user-defined two way handshake",
   "author": "Stephen Whitmore <sww@eight.net>",
-  "version": "3.0.4",
+  "version": "3.0.5",
   "repository": {
     "url": "git://github.com/noffle/handshake-stream.git"
   },
