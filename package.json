@@ -15,6 +15,7 @@
   },
   "keywords": [],
   "dependencies": {
+    "debug": "^4.1.1",
     "duplexify": "^3.6.1"
   },
   "devDependencies": {
